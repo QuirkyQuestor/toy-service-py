@@ -21,5 +21,5 @@ curl -i http://localhost:8000/readyz    # 503 when Postgres is down
 
 ## Status
 
-Working: health and readiness probes (readiness checks Postgres via the pool).<br>
-Next: items CRUD, tests, graceful shutdown.
+Working: health and readiness probes (readiness checks Postgres via the pool), items list and get by id.<br>
+Next: items create, update, delete, tests, graceful shutdown.
