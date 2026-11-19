@@ -35,3 +35,12 @@ async def update_item(store: StoreDep, item_id: int, item: ItemIn) -> Item:
             status_code=status.HTTP_404_NOT_FOUND, detail="item not found"
         )
     return the_item
+
+
+@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_item(store: StoreDep, item_id: int) -> None:
+    deleted = await store.delete(item_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="item not found"
+        )

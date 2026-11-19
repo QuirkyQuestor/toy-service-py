@@ -13,6 +13,7 @@ class ItemsStore(Protocol):
     async def get_all(self) -> list[Item]: ...
     async def add(self, item_name: str) -> Item: ...
     async def update(self, item_id: int, item: ItemIn) -> Item | None: ...
+    async def delete(self, item_id: int) -> bool: ...
 
 
 class PostgresItemsStore:
@@ -61,6 +62,17 @@ class PostgresItemsStore:
             )
             updated_row = await cur.fetchone()
         return updated_row
+
+    async def delete(self, item_id: int) -> bool:
+        async with (
+            self._pool.connection() as conn,
+            conn.cursor() as cur,
+        ):
+            await cur.execute(
+                "DELETE FROM items WHERE id = %s",
+                (item_id,),
+            )
+            return cur.rowcount == 1
 
 
 def get_store(pool: PoolDep) -> ItemsStore:
