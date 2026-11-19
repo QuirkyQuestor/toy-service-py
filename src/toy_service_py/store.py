@@ -5,14 +5,14 @@ from psycopg.rows import class_row
 from psycopg_pool import AsyncConnectionPool
 
 from .db import PoolDep
-from .schemas import Item
+from .schemas import Item, ItemIn
 
 
 class ItemsStore(Protocol):
     async def get_one(self, item_id: int) -> Item | None: ...
     async def get_all(self) -> list[Item]: ...
     async def add(self, item_name: str) -> Item: ...
-    async def update(self, item: Item) -> Item: ...
+    async def update(self, item_id: int, item: ItemIn) -> Item | None: ...
 
 
 class PostgresItemsStore:
@@ -38,10 +38,29 @@ class PostgresItemsStore:
         return rows
 
     async def add(self, item_name: str) -> Item:
-        raise NotImplementedError
+        async with (
+            self._pool.connection() as conn,
+            conn.cursor(row_factory=class_row(Item)) as cur,
+        ):
+            await cur.execute(
+                "INSERT INTO items (name) VALUES (%s) RETURNING id, name",
+                (item_name,),
+            )
+            new_row = await cur.fetchone()
+            assert new_row is not None
+        return new_row
 
-    async def update(self, item: Item) -> Item:
-        raise NotImplementedError
+    async def update(self, item_id: int, item: ItemIn) -> Item | None:
+        async with (
+            self._pool.connection() as conn,
+            conn.cursor(row_factory=class_row(Item)) as cur,
+        ):
+            await cur.execute(
+                "UPDATE items SET name = %s WHERE id = %s RETURNING id, name",
+                (item.name, item_id),
+            )
+            updated_row = await cur.fetchone()
+        return updated_row
 
 
 def get_store(pool: PoolDep) -> ItemsStore:

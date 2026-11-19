@@ -1,6 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
-class Item(BaseModel):
+class ItemIn(BaseModel):
+    name: str = Field(min_length=1)
+
+
+class Item(ItemIn):
     id: int
-    name: str
